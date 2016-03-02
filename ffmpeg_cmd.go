@@ -33,8 +33,8 @@ func ffmpegStart(s *VServer){
 	}
 }
 
-func (f *ffmpeg) Start(in *string, w *string, h *string){
-	log.Println("Starting stream with: ", *in, " ", *w, " ", *h)
+func (f *ffmpeg) Start(in *string){
+	log.Println("Starting stream with: ", *in)
 	FFMPEG_ARGS[1] = *in
 	go ffmpegStart(f.listener)
 }

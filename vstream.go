@@ -16,6 +16,8 @@ const (
 
 type VServer struct{
 	clients map[*client]bool
+	width uint16
+	height uint16
 }
 
 var upgrader = websocket.Upgrader{
@@ -26,8 +28,10 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: socketBufferSize,
 }
 
+/*
 var width uint16 = 640
 var height uint16 = 480
+*/
 var magicBytes = []byte("jsmp")
 
 func (s *VServer) Echo(w http.ResponseWriter, r *http.Request) {
@@ -39,8 +43,8 @@ func (s *VServer) Echo(w http.ResponseWriter, r *http.Request) {
 
 	buf := new(bytes.Buffer)
 	binary.Write(buf, binary.BigEndian, magicBytes)
-	binary.Write(buf, binary.BigEndian, width)
-	binary.Write(buf, binary.BigEndian, height)
+	binary.Write(buf, binary.BigEndian, s.width)
+	binary.Write(buf, binary.BigEndian, s.height)
 
 	err = socket.WriteMessage(websocket.BinaryMessage, buf.Bytes())
 
@@ -62,9 +66,11 @@ func (s *VServer) Broadcast(reader *bytes.Reader) {
 	}
 }
 
-func NewServer() *VServer{
+func NewServer(width uint16, height uint16) *VServer{
 	vs := VServer{
 		clients: make(map[*client]bool),
+		width: width,
+		height: height,
 	}
 	return &vs
 }
