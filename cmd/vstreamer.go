@@ -1,41 +1,38 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"flag"
 	"net/http"
-	"fmt"
-	"bytes"
 	"github.com/alexjch/vstreamer"
 )
 
-const(
-	FFMPEG_CMD = "/usr/bin/ffmpeg"
+const (
+	DEFAULT_PORT = "7072"
+	DEFAULT_VIDEO_IN = "/dev/video0"
+	DEFAULT_W = "640"
+	DEFAULT_H = "480"
+	usage = "Usage: vstreamer [W=<width> H=<height> P=<port> V=<video_in>]"
 )
-//var FFMPEG_ARGS = []string{"-i", "/dev/video0", "-f", "mpeg1video", "-"}
-var FFMPEG_ARGS = []string{"-i", "BigBuckBunny_640x360.m4v", "-f", "mpeg1video", "-"}
-//var addr = flag.String("addr", "10.0.1.21:8080", "http service address")
-var addr = flag.String("addr", "0.0.0.0:3000", "http service address")
 
-func setSource(s *vstreamer.VServer) http.HandlerFunc{
-	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request){
-		p := make([]byte, 8096)
-		for{
-			count, err := r.Body.Read(p);
-			if err != nil{
-				log.Println(err)
-				r.Body.Close()
-				return
-			}
-			s.Broadcast(bytes.NewReader(p[0:count]))
-		}
-	})
+func parseArgs() (*string, *string, *string, *string){
+	port := flag.String("P", DEFAULT_PORT, "Port number")
+	video_in := flag.String("video", DEFAULT_VIDEO_IN, "Video input")
+	width := flag.String("W", DEFAULT_W, "Video width")
+	height := flag.String("H", DEFAULT_H, "Video height")
+	flag.Parse()
+	return port, video_in, width, height
 }
 
 func main(){
-	fmt.Println("Starting streamming")
-	var videoStreamer = vstreamer.NewServer()
+	port, video_in, width, height := parseArgs()
+	server_addr := fmt.Sprintf("0.0.0.0:%s", *port)
+	addr := flag.String("addr", server_addr, "http service address")
+	videoStreamer := vstreamer.NewServer()
+	videoSource := vstreamer.NewFfmpegProcess(videoStreamer)
+	videoSource.Start(video_in, width, height)
 	http.HandleFunc("/echo", videoStreamer.Echo)
-	http.HandleFunc("/stream", setSource(videoStreamer))
+	log.Println("Starting web socket server on: ", server_addr)
 	http.ListenAndServe(*addr, nil)
 }
