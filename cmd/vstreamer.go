@@ -14,7 +14,7 @@ const (
 	DEFAULT_VIDEO_IN = "/dev/video0"
 	DEFAULT_W = "640"
 	DEFAULT_H = "480"
-	usage = "Usage: vstreamer [W=<width> H=<height> P=<port> V=<video_in>]"
+	usage = "Usage: vstreamer [W=<width> H=<height> P=<port> -video=<video_in>]"
 )
 
 func parseArgs() (*string, *string, uint16, uint16){
