@@ -1,5 +1,6 @@
 # video_stream_go
-Streaming video to websockets using go, inspired by [this project](http://phoboslab.org/log/2013/09/html5-live-video-streaming-via-websockets). 
+Streaming video to websockets using go, inspired by [this project](http://phoboslab.org/log/2013/09/html5-live-video-streaming-via-websockets). Modifications
+were made to the original idea and a whole new server using go was created to my specific usage (IP camera using intel edison)
 
 The default options will stream a 640x480 stream from /dev/video0
 
@@ -27,6 +28,6 @@ root/
          jsmpg.js
 ```
 
-The binary vstreamer will look for the static files (html and js) under www and www/js folders respectively.
+The binary vstreamer will look for the static files (`.html` and `.js`) under `www` and `www/js` folders respectively.
 
 
