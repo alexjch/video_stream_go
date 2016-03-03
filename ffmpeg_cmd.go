@@ -12,6 +12,7 @@ import (
 type ffmpeg struct {
 	// Video streamer server that will broadcast the video stream produced by ffmpeg
 	listener *VServer
+	stopMe chan bool
 }
 
 const(
@@ -26,6 +27,7 @@ func (f *ffmpeg) Run(){
     stdout, _ := ffmpeg.StdoutPipe()
 	ffmpeg.Start()
 
+	// Stop if ffmpeg invocation fails
 	go func(){
 		if err := ffmpeg.Wait(); err != nil{
 			log.Println("ffmpeg invocation failed, make sure the input video exists")
@@ -33,30 +35,45 @@ func (f *ffmpeg) Run(){
 		}
 	}()
 
-	for{
-		count, err := stdout.Read(buffer)
-		if err == io.EOF {
-			stdout.Close()
-			break
+	// Broadcast data
+	go func(){
+		for{
+			count, err := stdout.Read(buffer)
+			if err == io.EOF {
+				stdout.Close()
+				break
+			}
+			f.listener.Broadcast(bytes.NewReader(buffer[0:count]))
 		}
-		f.listener.Broadcast(bytes.NewReader(buffer[0:count]))
-	}
+	}()
+
+	// Check if process should be terminated
+	go func(){
+		_ <-f.stopMe
+		if err := ffmpeg.Process.Kill(); err != nil{
+			log.Println("An error was encounter stopping ffmpeg process ", err)
+		}
+	}()
 }
 
 func (f *ffmpeg) Start(in *string){
 	log.Println("Starting stream ", *in)
 	FFMPEG_ARGS[1] = *in
-	go f.Run()
+	f.Run()
 }
 
 func (f *ffmpeg) Stop(){
-
+	log.Println("Stopping stream")
+	f.stopMe <- true
 }
 
 func NewFfmpegProcess(s *VServer) *ffmpeg{
 	ff := ffmpeg{
 		listener: s,
+		stopMe: make(chan bool),
 	}
+
+	defer ff.stopMe.Close()
 
 	return &ff
 }
