@@ -20,7 +20,7 @@ var FFMPEG_ARGS = []string{"-i", "/dev/video0", "-f", "mpeg1video", "-"}
 func ffmpegStart(s *VServer){
 	buffer := make([]byte, 8096)
 	ffmpeg := exec.Command(FFMPEG_CMD, FFMPEG_ARGS...)
-	stdout, _ := ffmpeg.StdoutPipe()
+    stdout, _ := ffmpeg.StdoutPipe()
 	_ = ffmpeg.Start()
 
 	for{

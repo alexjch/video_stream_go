@@ -21,8 +21,6 @@ func NewClient(socket *websocket.Conn) *client{
 	c := client{
 		socket: socket,
 	}
-
 	go c.readLoop()
-
 	return &c
 }
