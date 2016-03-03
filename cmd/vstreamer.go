@@ -1,9 +1,12 @@
 package main
 
 import (
+    "os"
 	"fmt"
 	"log"
 	"flag"
+    "path"
+    "path/filepath"
 	"net/http"
 	"github.com/alexjch/vstreamer"
 )
@@ -16,11 +19,22 @@ const (
 	usage = "Usage: vstreamer [-width=<width> -height=<height> -port=<port> -video=<video_in>]"
 )
 
+func getStaticDir() http.Handler{
+    staticDir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+    log.Println(staticDir)
+    return http.FileServer(http.Dir(path.Join(staticDir, "www")))
+}
+
+
 func parseArgs() (int, *string, uint16, uint16){
 	port := flag.Int("port", DEFAULT_PORT, "Port number")
 	video_in := flag.String("video", DEFAULT_VIDEO_IN, "Video input")
 	width := flag.Uint("width", DEFAULT_W, "Video width")
 	height := flag.Uint("height", DEFAULT_H, "Video height")
+    // TODO: handle error and print usage
+    // TODO: serve static content
+    // TODO: serve width, height from movie
+    // TODO: shutdown, startup video feed when clients = 0
 	flag.Parse()
 	return *port, video_in, uint16(*width), uint16(*height)
 }
@@ -33,6 +47,7 @@ func main(){
 	videoSource := vstreamer.NewFfmpegProcess(videoStreamer)
 	videoSource.Start(video_in)
 	http.HandleFunc("/echo", videoStreamer.Echo)
+    http.Handle("/", getStaticDir())
 	log.Println("Starting web socket server on: ", server_addr)
 	http.ListenAndServe(*addr, nil)
 }
