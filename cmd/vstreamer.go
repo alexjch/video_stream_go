@@ -32,7 +32,7 @@ func parseArgs() (int, *string, uint16, uint16){
 	video_in := flag.String("video", DEFAULT_VIDEO_IN, "Video input")
 	width := flag.Uint("width", DEFAULT_W, "Video width")
 	height := flag.Uint("height", DEFAULT_H, "Video height")
-    // TODO: serve width, height from movie
+    // TODO: serve width, height from vstreamer invocation
 	flag.Parse()
 	return *port, video_in, uint16(*width), uint16(*height)
 }
