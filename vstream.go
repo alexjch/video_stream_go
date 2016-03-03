@@ -11,7 +11,6 @@ import (
 
 const (
 	socketBufferSize = 1024
-	messageBufferSize = 256
 )
 
 type VServer struct{
@@ -28,10 +27,6 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: socketBufferSize,
 }
 
-/*
-var width uint16 = 640
-var height uint16 = 480
-*/
 var magicBytes = []byte("jsmp")
 
 func (s *VServer) Echo(w http.ResponseWriter, r *http.Request) {

@@ -9,7 +9,7 @@ type client struct{
 }
 
 func (c *client) readLoop() {
-	for{
+    for{
 		if _, _, err := c.socket.NextReader(); err != nil{
 			c.socket.Close()
 			break
