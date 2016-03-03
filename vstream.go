@@ -17,6 +17,8 @@ type VServer struct{
 	clients map[*client]bool
 	width uint16
 	height uint16
+	in *string
+	videoSource *ffmpeg
 }
 
 var upgrader = websocket.Upgrader{
@@ -46,6 +48,10 @@ func (s *VServer) Echo(w http.ResponseWriter, r *http.Request) {
 
 	s.clients[client] = true
 	log.Println("Websocket clients:", len(s.clients))
+
+	if len(s.clients) == 1 {
+		s.videoSource.Start(s)
+	}
 }
 
 func (s *VServer) Broadcast(reader *bytes.Reader) {
@@ -55,6 +61,9 @@ func (s *VServer) Broadcast(reader *bytes.Reader) {
 		if err != nil{
 			delete(s.clients, client)
 			log.Println("Websocket clients:", len(s.clients))
+			if len(s.clients) == 0 {
+				s.videoSource.Stop()
+			}
 			continue;
 		}
 		writers = append(writers, writer)
@@ -69,11 +78,13 @@ func (s *VServer) Broadcast(reader *bytes.Reader) {
 	}
 }
 
-func NewServer(width uint16, height uint16) *VServer{
+func NewServer(width uint16, height uint16, videoIn *string) *VServer{
 	vs := VServer{
 		clients: make(map[*client]bool),
 		width: width,
 		height: height,
+		in: videoIn,
+		videoSource: NewFfmpegProcess(),
 	}
 	return &vs
 }

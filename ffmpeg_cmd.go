@@ -27,11 +27,15 @@ func (f *ffmpeg) Run(){
     stdout, _ := ffmpeg.StdoutPipe()
 	ffmpeg.Start()
 
-	// Stop if ffmpeg invocation fails
+	// Wait for ffmpeg to finish
 	go func(){
 		if err := ffmpeg.Wait(); err != nil{
-			log.Println("ffmpeg invocation failed, make sure the input video exists")
-			os.Exit(-1);
+			if ffmpeg.ProcessState.Exited() {
+				log.Println("ffmpeg invocation failed", FFMPEG_CMD, " ", FFMPEG_ARGS)
+				os.Exit(-1);
+			} else {
+				log.Println("ffmpeg was intentionally stopped")
+			}
 		}
 	}()
 
@@ -49,31 +53,37 @@ func (f *ffmpeg) Run(){
 
 	// Check if process should be terminated
 	go func(){
-		_ <-f.stopMe
+		<-f.stopMe
 		if err := ffmpeg.Process.Kill(); err != nil{
 			log.Println("An error was encounter stopping ffmpeg process ", err)
 		}
 	}()
 }
 
-func (f *ffmpeg) Start(in *string){
-	log.Println("Starting stream ", *in)
-	FFMPEG_ARGS[1] = *in
-	f.Run()
+func (f *ffmpeg) Start(l *VServer){
+	if f.listener == nil{
+		f.listener = l
+		log.Println("Starting stream ", *l.in)
+		FFMPEG_ARGS[1] = *l.in
+		f.Run()
+	} else {
+		log.Println("Stream is already started")
+	}
 }
 
 func (f *ffmpeg) Stop(){
 	log.Println("Stopping stream")
 	f.stopMe <- true
+	f.listener = nil
 }
 
-func NewFfmpegProcess(s *VServer) *ffmpeg{
+func NewFfmpegProcess() *ffmpeg{
 	ff := ffmpeg{
-		listener: s,
+		listener: nil,
 		stopMe: make(chan bool),
 	}
 
-	defer ff.stopMe.Close()
+	//defer close(ff.stopMe)
 
 	return &ff
 }
