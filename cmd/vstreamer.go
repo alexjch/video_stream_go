@@ -21,8 +21,9 @@ const (
 
 func getStaticDir() http.Handler{
     staticDir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-    log.Println(staticDir)
-    return http.FileServer(http.Dir(path.Join(staticDir, "www")))
+	staticWWW := path.Join(staticDir, "www")
+    log.Println("Serving static files from: ", staticWWW)
+    return http.FileServer(http.Dir(staticWWW))
 }
 
 
