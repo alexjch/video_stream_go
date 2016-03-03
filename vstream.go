@@ -47,22 +47,30 @@ func (s *VServer) Echo(w http.ResponseWriter, r *http.Request) {
 	binary.Write(buf, binary.BigEndian, s.height)
 
 	err = socket.WriteMessage(websocket.BinaryMessage, buf.Bytes())
-
-	client := &client{
-		socket: socket,
-	}
+	client := NewClient(socket)
 
 	s.clients[client] = true
 	log.Println("Websocket clients:", len(s.clients))
 }
 
 func (s *VServer) Broadcast(reader *bytes.Reader) {
+	var writers []io.Writer
 	for client := range s.clients{
-		writer, _ := client.socket.NextWriter(websocket.BinaryMessage)
-		if _, err := io.Copy(writer, reader); err != nil{
+		writer, err := client.socket.NextWriter(websocket.BinaryMessage)
+		if err != nil{
 			delete(s.clients, client)
+			log.Println("Websocket clients:", len(s.clients))
+			continue;
 		}
-		writer.Close()
+		writers = append(writers, writer)
+		defer writer.Close()
+	}
+
+	if len(writers) > 0 {
+		wrtr := io.MultiWriter(writers...)
+		if _, err := io.Copy(wrtr, reader); err != nil{
+			log.Println(err)
+		}
 	}
 }
 
