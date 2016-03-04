@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"os/exec"
 	"log"
+	"fmt"
 )
 
 // ffmpeg wrapper
@@ -19,26 +20,28 @@ const(
 	FFMPEG_CMD = "/usr/bin/ffmpeg"
 )
 
-var FFMPEG_ARGS = []string{"-i", "/dev/video0", "-f", "mpeg1video", "-"}
+var FFMPEG_ARGS = []string{"-i", "/dev/video2", "-f", "mpeg1video", "-"}
 
 func (f *ffmpeg) Run(){
 	buffer := make([]byte, 8096)
 	ffmpeg := exec.Command(FFMPEG_CMD, FFMPEG_ARGS...)
     stdout, _ := ffmpeg.StdoutPipe()
-	ffmpeg.Start()
+	if err := ffmpeg.Start(); err != nil{
+		log.Println(fmt.Sprintf("ffmpeg invocation failed CMD:%s ARGS:%s", FFMPEG_CMD, FFMPEG_ARGS))
+		os.Exit(-1)
+	}
 
 	// Wait for ffmpeg to finish
 	go func(){
 		if err := ffmpeg.Wait(); err != nil{
 			if ffmpeg.ProcessState.Exited() {
-				log.Println("ffmpeg invocation failed", FFMPEG_CMD, " ", FFMPEG_ARGS)
+				log.Println("ffmpeg invocation failed")
 				os.Exit(-1);
 			} else {
 				log.Println("ffmpeg was intentionally stopped")
 			}
 		}
 	}()
-
 	// Broadcast data
 	go func(){
 		for{
@@ -50,7 +53,6 @@ func (f *ffmpeg) Run(){
 			f.listener.Broadcast(bytes.NewReader(buffer[0:count]))
 		}
 	}()
-
 	// Check if process should be terminated
 	go func(){
 		<-f.stopMe
@@ -67,7 +69,7 @@ func (f *ffmpeg) Start(l *VServer){
 		FFMPEG_ARGS[1] = *l.in
 		f.Run()
 	} else {
-		log.Println("Stream is already started")
+		log.Println("Stream already started")
 	}
 }
 
@@ -82,8 +84,6 @@ func NewFfmpegProcess() *ffmpeg{
 		listener: nil,
 		stopMe: make(chan bool),
 	}
-
-	//defer close(ff.stopMe)
 
 	return &ff
 }

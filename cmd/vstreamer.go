@@ -39,6 +39,11 @@ func parseArgs() (int, *string, uint16, uint16){
 
 func main(){
 	port, video_in, width, height := parseArgs()
+	// Validating if video input exists
+	if _, err := os.Stat(*video_in); os.IsNotExist(err){
+		log.Println(*video_in, " does not exists")
+		os.Exit(-1)
+	}
 	server_addr := fmt.Sprintf("0.0.0.0:%d", port)
 	addr := flag.String("addr", server_addr, "http service address")
 	videoStreamer := vstreamer.NewServer(width, height, video_in)
