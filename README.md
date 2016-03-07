@@ -8,7 +8,7 @@ The default options will stream a 640x480 stream from /dev/video0
 # > ./vstreamer
 ```
 
-Possible command line arguments are:
+Optional command line arguments:
 
 ```
 -video=<video source> -heigh=<video_height_format> -width=<video_width_format> -port=<server_port>
