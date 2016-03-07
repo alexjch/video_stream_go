@@ -1,48 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta name="viewport" content="width=320, initial-scale=1"/>
-	<title>video streaming</title>
-	<style type="text/css">
-		body {
-			background: #333;
-			text-align: center;
-			margin-top: 10%;
-		}
+    <meta name="viewport" content="width=320, initial-scale=1"/>
+    <title>video streaming</title>
+    <style type="text/css">
+        body {
+            background: #333;
+            text-align: center;
+            margin-top: 10%;
+        }
     </style>
 </head>
 <body>
 
-	<script type="text/javascript" src="js/jsmpg.js"></script>
-	<script type="text/javascript">
+<script type="text/javascript" src="js/jsmpg.js"></script>
+<script type="text/javascript">
+    (function () {
+        /** Setup the WebSocket connection and start the player **/
+        var endpoint = ['ws://', String(window.location.host), '/echo'].join('');
+        var client = new WebSocket(endpoint);
+        var req = new XMLHttpRequest();
+        var player = null;
+        /**
+         * Adds canvas element programmatically after the size of the
+         * video stream is received from server
+         */
+        req.onreadystatechange = function (data) {
+            if(req.readyState  == 4){
+                if( req.status  == 200){
+                    var canvas = document.createElement('canvas');
+                    canvas.width = req.response.width;
+                    canvas.height = req.response.height;
+                    document.getElementsByTagName('body')[0].appendChild(canvas);
+                    player = new jsmpeg(client, {canvas: canvas});
+                }
+            }
+        };
+        /** Get frame size from backend **/
+        req.open('GET', '/frame_size');
+        req.responseType = 'json';
+        req.send();
 
-		(function(){
-			// Setup the WebSocket connection and start the player
-            var endpoint = ['ws://', String(window.location.host), '/echo'].join('');
-            var client = new WebSocket(endpoint);
-            var req = new XMLHttpRequest();
+        /** Clean up after myself when closing window **/
+        window.onbeforeunload = function () {
+            client.close();
+        };
+    })();
 
-            /**
-             * Adds canvas element programmatically after the size of the
-             * video stream is received from server
-             * @param data, json response from server with frame dimensions
-             */
-            req.onload = function(data){
-                var canvas = document.createElement('canvas');
-                canvas.width = 640; //data.width;
-                canvas.height = 480; //data.height;
-                document.getElementsByTagName('body')[0].appendChild(canvas);
-                var player = new jsmpeg(client, {canvas:canvas});
-            };
-            req.open('GET', '/frame_size');
-            req.responseType = 'json';
-            req.send();
-
-			window.onbeforeunload = function(){
-				client.close();
-			};
-
-		})();
-	</script>
+</script>
 </body>
 </html>
