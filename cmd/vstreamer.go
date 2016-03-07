@@ -48,7 +48,11 @@ func main(){
 	addr := flag.String("addr", server_addr, "http service address")
 	videoStreamer := vstreamer.NewServer(width, height, video_in)
 	http.HandleFunc("/echo", videoStreamer.Echo)
-    http.Handle("/", getStaticDir())
+	http.HandleFunc("/frame_size",  func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/json")
+		w.Write([]byte(fmt.Sprintf("{width: %d, height: %d}", width, height)))
+	})
+	http.Handle("/", getStaticDir())
 	log.Println("Starting web socket server on: ", server_addr)
 	http.ListenAndServe(*addr, nil)
 }

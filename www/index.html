@@ -27,17 +27,16 @@
              * video stream is received from server
              * @param data, json response from server with frame dimensions
              */
-            //req.onload = function(data){
+            req.onload = function(data){
                 var canvas = document.createElement('canvas');
                 canvas.width = 640; //data.width;
                 canvas.height = 480; //data.height;
                 document.getElementsByTagName('body')[0].appendChild(canvas);
                 var player = new jsmpeg(client, {canvas:canvas});
-            /*};
-            TODO: use templates? for width, height
-            req.open('GET', '/size');
+            };
+            req.open('GET', '/frame_size');
             req.responseType = 'json';
-            req.send();*/
+            req.send();
 
 			window.onbeforeunload = function(){
 				client.close();
