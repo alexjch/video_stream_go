@@ -1,23 +1,23 @@
 package vstreamer
 
 import (
-	"io"
-	"log"
 	"bytes"
-	"net/http"
 	"encoding/binary"
 	"github.com/gorilla/websocket"
+	"io"
+	"log"
+	"net/http"
 )
 
 const (
 	socketBufferSize = 1024
 )
 
-type VServer struct{
-	clients map[*client]bool
-	width uint16
-	height uint16
-	in *string
+type VServer struct {
+	clients     map[*client]bool
+	width       uint16
+	height      uint16
+	in          *string
 	videoSource *ffmpeg
 }
 
@@ -25,7 +25,7 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
-	ReadBufferSize: socketBufferSize,
+	ReadBufferSize:  socketBufferSize,
 	WriteBufferSize: socketBufferSize,
 }
 
@@ -56,15 +56,15 @@ func (s *VServer) Echo(w http.ResponseWriter, r *http.Request) {
 
 func (s *VServer) Broadcast(reader *bytes.Reader) {
 	var writers []io.Writer
-	for client := range s.clients{
+	for client := range s.clients {
 		writer, err := client.socket.NextWriter(websocket.BinaryMessage)
-		if err != nil{
+		if err != nil {
 			delete(s.clients, client)
 			log.Println("Websocket clients:", len(s.clients))
 			if len(s.clients) == 0 {
 				s.videoSource.Stop()
 			}
-			continue;
+			continue
 		}
 		writers = append(writers, writer)
 		defer writer.Close()
@@ -72,18 +72,18 @@ func (s *VServer) Broadcast(reader *bytes.Reader) {
 
 	if len(writers) > 0 {
 		wrtr := io.MultiWriter(writers...)
-		if _, err := io.Copy(wrtr, reader); err != nil{
+		if _, err := io.Copy(wrtr, reader); err != nil {
 			log.Println(err)
 		}
 	}
 }
 
-func NewServer(width uint16, height uint16, videoIn *string) *VServer{
+func NewServer(width uint16, height uint16, videoIn *string) *VServer {
 	vs := VServer{
-		clients: make(map[*client]bool),
-		width: width,
-		height: height,
-		in: videoIn,
+		clients:     make(map[*client]bool),
+		width:       width,
+		height:      height,
+		in:          videoIn,
 		videoSource: NewFfmpegProcess(),
 	}
 	return &vs
