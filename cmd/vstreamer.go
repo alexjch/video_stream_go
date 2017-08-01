@@ -49,5 +49,6 @@ func main() {
 	http.HandleFunc("/echo", videoStreamer.Echo)
 	http.Handle("/", getStaticDir())
 	log.Println("Starting web socket server on: ", server_addr)
+	http.HandleFunc("/frame_size", videoStreamer.FrameSize)
 	http.ListenAndServe(*addr, nil)
 }

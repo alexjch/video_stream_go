@@ -3,6 +3,7 @@ package vstreamer
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"io"
 	"log"
@@ -52,6 +53,10 @@ func (s *VServer) Echo(w http.ResponseWriter, r *http.Request) {
 	if len(s.clients) == 1 {
 		s.videoSource.Start(s)
 	}
+}
+
+func (s *VServer) FrameSize(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "{width:%d, height:%d}", s.width, s.height)
 }
 
 func (s *VServer) Broadcast(reader *bytes.Reader) {
