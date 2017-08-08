@@ -38,6 +38,7 @@
         };
         /** Get frame size from backend **/
         req.open('GET', '/frame_size');
+        req.responseType = 'json';
         req.send();
 
         /** Clean up after myself when closing window **/

@@ -56,7 +56,8 @@ func (s *VServer) Echo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *VServer) FrameSize(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "{width:%d, height:%d}", s.width, s.height)
+        w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, "{\"width\":%d, \"height\":%d}", s.width, s.height)
 }
 
 func (s *VServer) Broadcast(reader *bytes.Reader) {
