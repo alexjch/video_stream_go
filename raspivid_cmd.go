@@ -1,5 +1,5 @@
 // +build linux
-// +build 386
+// +build arm
 
 package vstreamer
 
@@ -14,26 +14,26 @@ import (
     "sync"
 )
 
-// ffmpeg wrapper
+// raspivid wrapper
 type VideoStream struct {
-	// Video streamer server that will broadcast the video stream produced by ffmpeg
+	// Video streamer server that will broadcast the video stream produced by raspivid
 	listener *VServer
 	stopMe   chan bool
 }
 
 const (
-	FFMPEG_CMD = "/usr/bin/ffmpeg"
+	RASPIVID_CMD = "/usr/bin/raspivid"
 )
 
-var FFMPEG_ARGS = []string{"-i", "/dev/video2", "-f", "mpeg1video", "-"}
+var RASPIVID_ARGS = []string{"--nopreview", "--exposure", "auto", "--output", "-"}
 
 func (f *VideoStream) Run() {
     var wg sync.WaitGroup
 	buffer := make([]byte, 8096)
-	ffmpeg := exec.Command(FFMPEG_CMD, FFMPEG_ARGS...)
-	stdout, _ := ffmpeg.StdoutPipe()
-	if err := ffmpeg.Start(); err != nil {
-		log.Println(fmt.Sprintf("ffmpeg invocation failed CMD:%s ARGS:%s", FFMPEG_CMD, FFMPEG_ARGS))
+	raspivid := exec.Command(RASPIVID_CMD, RASPIVID_ARGS...)
+	stdout, _ := raspivid.StdoutPipe()
+	if err := raspivid.Start(); err != nil {
+		log.Println(fmt.Sprintf("raspivid invocation failed CMD:%s ARGS:%s", RASPIVID_CMD, RASPIVID_ARGS))
 		os.Exit(-1)
 	}
     wg.Add(2)
@@ -52,14 +52,14 @@ func (f *VideoStream) Run() {
 	// Check if process should be terminated
 	go func() {
 		<-f.stopMe
-        log.Println("Sending SIGINT to ffmpeg")
-        if err := ffmpeg.Process.Signal(syscall.SIGINT); err != nil {
-			log.Println("An error was encounter stopping ffmpeg process ", err)
+        log.Println("Sending SIGINT to raspivid")
+        if err := raspivid.Process.Signal(syscall.SIGINT); err != nil {
+			log.Println("An error was encounter stopping raspivid process ", err)
 		}
         wg.Done()
 	}()
-    // Wait for ffmpeg to finish
-    ffmpeg.Wait()
+    // Wait for raspivid to finish
+    raspivid.Wait()
     wg.Wait()
     f.listener = nil
 }
@@ -68,7 +68,7 @@ func (f *VideoStream) Start(l *VServer) {
 	if f.listener == nil {
 		f.listener = l
 		log.Println("Starting stream ", *l.in)
-		FFMPEG_ARGS[1] = *l.in
+		RASPIVID_ARGS[1] = *l.in
 		f.Run()
 	} else {
 		log.Println("Stream already started")

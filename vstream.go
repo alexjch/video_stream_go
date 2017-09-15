@@ -19,7 +19,7 @@ type VServer struct {
 	width       uint16
 	height      uint16
 	in          *string
-	videoSource *ffmpeg
+	videoSource *VideoStream
 }
 
 var upgrader = websocket.Upgrader{
@@ -90,7 +90,7 @@ func NewServer(width uint16, height uint16, videoIn *string) *VServer {
 		width:       width,
 		height:      height,
 		in:          videoIn,
-		videoSource: NewFfmpegProcess(),
+		videoSource: NewVideoSource(),
 	}
 	return &vs
 }
